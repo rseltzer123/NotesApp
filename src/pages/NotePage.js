@@ -1,12 +1,29 @@
-import React, {useState, useEffect} from 'react'
+import React, { useState, useEffect } from 'react'
+import noteDataService from '../services/NoteService'
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom'
 import { ReactComponent as ArrowLeft } from '../assets/arrow-left.svg'
-//import notes from '../assets/data'
+import { 
+    createNote,
+    updateNote,
+    deleteNote,
+    retrieveNotes,
+    deleteAllNotes 
+       } from '../actions/notes'
+import { response } from "express";
 
 const Notepage = ({match, history}) => {
     let noteId = match.params.id
-
-    let [note, setNote] = useState(null)
+   
+    const intialNoteState = {
+            id: null,
+            body: ""
+        };
+    const [note, setNote] = useState(intialNoteState);
+    const [currentNote, setCurrentNote] = useState(null);
+    const [message, setMessage] = useState("");
+    const dispatch = useDispatch();
+ 
 
     useEffect(() => {
       
@@ -14,56 +31,61 @@ const Notepage = ({match, history}) => {
 
     }, [noteId])
 
-    //let note = notes.find(note => note.id == noteId)
 
     let getNote = async () => {
         if(noteId === 'new') return
 
-        let response = await fetch(`http://127.0.0.1:5000/notes/${noteId}`)
-        let data = await response.json()
-        setNote(data)
+       dispatch(retrieveNotes());
     }
+    
 
-    let createNote = async () => {
-        await fetch(`http://127.0.0.1:5000/notes/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type':'application/json'
-            },
-            body: JSON.stringify({...note, 'updated': new Date() })
-        })
-    }
+    const saveNote = () => {
+        const {body} = note;
+        dispatch(createNote(body))
+            .then(data => {
+                setNote({
+                    id: data.id,
+                    body: data.body
+                });
+                setSubmitted(true);
+                console.log(data);
+            })
+            .catch(e => {
+                console.log(e);
+            });
+    };
 
-    let updateNote = async () => {
-        await fetch(`http://127.0.0.1:5000/notes/${noteId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type':'application/json'
-            },
-            body: JSON.stringify({...note, 'updated': new Date() })
-        })
-    }
+    const updateContent = () => {
+        dispatch(updateNote(currentNote.id, currentNote))
+            .then(response => {
+                console.log(response);
+                setMessage("The note was updated succcessfully!");
+            })
+            .catch(e => {
+                console.log(e);
+            });
+    };
+    
 
 
-    let deleteNote = async () => {
-        await fetch(`http://127.0.0.1:5000/notes/${noteId}`, {
-            method:'DELETE',
-            headers:{
-                'Content-Type':'application/json'
-            },
-            body: JSON.stringify(note)
-        })
-        history.push('/')
-    }
+    const removeNote = () => {
+        dispatch(deleteNote(currentNote.id))
+            .then(() => {
+                props.history.push("/notes")
+            })
+            .catch(e => {
+                console.log(e);
+            });
+    };
 
 
     let handleSubmit = () => {
         if(noteId !== 'new' && !note.body) {
-            deleteNote()  
+            removeNote()  
         } else if(noteId !== 'new') {
-            updateNote()
+            updateContent()
         } else if(noteId === 'new' && note !==null) {
-            createNote()
+            saveNote()
         }
         
         history.push('/')
@@ -79,7 +101,7 @@ const Notepage = ({match, history}) => {
                 </Link>
                 </h3>
                 {noteId !== 'new' ? (
-                     <button onClick={deleteNote}>Delete</button>
+                     <button onClick={removeNote}>Delete</button>
                 ):(
                     <button onClick={handleSubmit}>Done</button>
                 )}

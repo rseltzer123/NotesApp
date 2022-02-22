@@ -10,6 +10,7 @@ import NotePage from './pages/NotePage';
 import './App.css';
 
 function App() {
+  
   return (
     <Router>
     <div className="container dark">
