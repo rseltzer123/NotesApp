@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import noteDataService from '../services/NoteService'
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux-hook'
 import { Link } from 'react-router-dom'
 import { ReactComponent as ArrowLeft } from '../assets/arrow-left.svg'
 import { 
     createNote,
     updateNote,
     deleteNote,
-    retrieveNotes,
-    deleteAllNotes 
+    retrieveNotes
        } from '../actions/notes'
-import { response } from "express";
+
 
 const Notepage = ({match, history}) => {
     let noteId = match.params.id
@@ -20,8 +18,9 @@ const Notepage = ({match, history}) => {
             body: ""
         };
     const [note, setNote] = useState(intialNoteState);
-    const [currentNote, setCurrentNote] = useState(null);
-    const [message, setMessage] = useState("");
+    const setSubmitted = useState(false);
+    const currentNote = useState(null);
+    const setMessage = useState("");
     const dispatch = useDispatch();
  
 
@@ -70,7 +69,7 @@ const Notepage = ({match, history}) => {
 
     const removeNote = () => {
         dispatch(deleteNote(currentNote.id))
-            .then(() => {
+            .then((props) => {
                 props.history.push("/notes")
             })
             .catch(e => {
